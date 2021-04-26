@@ -1,12 +1,12 @@
-struct Camera
-    lower_left_corner::Vec3
-    horizontal::Vec3
-    vertical::Vec3
-    origin::Vec3
-    u::Vec3
-    v::Vec3
-    w::Vec3
-    radius::Float64
+struct Camera{T}
+    lower_left_corner::Vec3{T}
+    horizontal::Vec3{T}
+    vertical::Vec3{T}
+    origin::Vec3{T}
+    u::Vec3{T}
+    v::Vec3{T}
+    w::Vec3{T}
+    radius::T
 end
 
 function Camera(from::Vec3, to::Vec3, vup::Vec3, vfov::Float64, aspect::Float64, aperture::Float64, focus::Float64)

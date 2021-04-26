@@ -1,5 +1,4 @@
-Option{T} = Union{Missing, T}
-Vec3 = SVector{3}
+const Option{T} = Union{Missing, T}
 
 unit_vector(v::Vec3) = v ./ norm(v)
 

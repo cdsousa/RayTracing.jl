@@ -1,6 +1,8 @@
-authors = ["cshenton <charlieshenton@me.com>"]
 name = "RayTracing"
 uuid = "93bfcd22-5310-11e9-1f66-adc99c31498a"
+authors = ["cshenton <charlieshenton@me.com>"]
 version = "0.1.0"
 
 [deps]
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

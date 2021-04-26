@@ -1,8 +1,9 @@
 module RayTracing
 
-using Distributed
+# using Distributed
 using LinearAlgebra
-using StaticArrays
+using Images
+using GeometryBasics
 
 include("vec.jl")
 include("ray.jl")
@@ -11,18 +12,18 @@ include("camera.jl")
 abstract type Hitable end
 abstract type Material end
 
-struct HitRecord
+struct HitRecord{T}
     t::Float64
-    p::Vec3
-    normal::Vec3
+    p::Vec3{T}
+    normal::Vec3{T}
     mat::Material
 end
 
 include("material/material.jl")
 
-struct Sphere <: Hitable
-    center::Vec3
-    radius::Float64
+struct Sphere{T} <: Hitable
+    center::Vec3{T}
+    radius::T
     mat::Material
 end
 
@@ -69,9 +70,9 @@ function hit(h::HitableList, r::Ray, tmin::Float64, tmax::Float64)::Option{HitRe
     rec
 end
 
-struct Scatter
-    ray::Ray
-    attenuation::Vec3
+struct Scatter{T}
+    ray::Ray{T}
+    attenuation::Vec3{T}
     reflect::Bool
 end
 
@@ -85,16 +86,17 @@ function color(r::Ray, world::Hitable, depth::Int)::Vec3
             return Vec3(0.0, 0.0, 0.0)
         end
     else
-        unit_direction = Vec3(r.direction)
+        unit_direction = Vec3{Float64}(r.direction)
         t = 0.5 * (unit_direction[2] + 1.0)
         (1.0 - t) .* Vec3(1.0, 1.0, 1.0) .+ t.*Vec3(0.5, 0.7, 1.0)
     end
 end
 
+
 function scene()::Hitable
     n = 500
     spheres = Sphere[]
-    push!(spheres, Sphere(Vec3(0.0, -1000.0, 0.0), 1000, Lambert(Vec3(0.5, 0.5, 0.5))))
+    push!(spheres, Sphere{Float64}(Vec3(0.0, -1000.0, 0.0), 1000, Lambert(Vec3(0.5, 0.5, 0.5))))
     for a=-11:11
         for b=-11:11
             choose_mat = rand()
@@ -117,27 +119,34 @@ function scene()::Hitable
     HitableList(spheres)
 end
 
-function render(io::IO, w::Hitable, c::Camera, nx=400, ny=200, ns=100)
-    println(io, "P3")
-    println(io, "$nx $ny")
-    println(io, "255")
-    for j in reverse(1:ny)
-        for i in 1:nx
+
+
+function render(w::Hitable, c::Camera, nx=400, ny=200, ns=100)
+    img = Matrix{RGB{Float64}}(undef, ny, nx)
+    for i in 1:nx
+        for j in reverse(1:ny)
             cols = Vector{Vec3}(undef, ns)
             for k in 1:ns
                 r = Ray(c, (i+rand())/nx, (j+rand())/ny)
-                cols[k] = color(r, w, 0)
+                cols[k] = RayTracing.color(r, w, 0)
             end
             col = sum(cols) ./ ns
             col = sqrt.(col)
-            ir = trunc(Int, 255.99*col[1])
-            ig = trunc(Int, 255.99*col[2])
-            ib = trunc(Int, 255.99*col[3])
-            println(io, "$ir $ig $ib")
+            ir = col[1]
+            ig = col[2]
+            ib = col[3]
+            img[ny-j+1, i] = RGB(ir,ig,ib)
         end
     end
+    img
 end
 
-render(stdout, scene(), Camera(), 20, 10, 1)
-
 end # module
+
+img = RayTracing.render(RayTracing.scene(), RayTracing.Camera(), 400, 200, 1)
+display(img)
+
+using FileIO
+save("img.png", img)
+
+
